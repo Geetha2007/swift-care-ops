@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Calendar,
-  Wrench,
+  Scissors,
   Users,
   CreditCard,
   Receipt,
@@ -25,7 +25,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Appointments", url: "/appointments", icon: Calendar },
-  { title: "Services", url: "/services", icon: Wrench },
+  { title: "Services", url: "/services", icon: Scissors },
   { title: "Staff", url: "/staff", icon: Users },
   { title: "Billing", url: "/billing", icon: CreditCard },
   { title: "Expenses", url: "/expenses", icon: Receipt },
@@ -52,7 +52,7 @@ export function AppSidebar() {
         className={cn(
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
           active
-            ? "gradient-primary text-primary-foreground shadow-glow"
+            ? "gradient-primary text-primary-foreground shadow-luxury"
             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         )}
       >
@@ -85,13 +85,18 @@ export function AppSidebar() {
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
         <Link to="/dashboard" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-primary shadow-luxury">
             <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           {!collapsed && (
-            <span className="text-lg font-bold text-sidebar-foreground">
-              BizFlow
-            </span>
+            <div className="flex flex-col">
+              <span className="text-lg font-heading font-semibold text-foreground">
+                Salon Smart
+              </span>
+              <span className="text-[10px] text-muted-foreground -mt-1">
+                Premium Management
+              </span>
+            </div>
           )}
         </Link>
         <Button

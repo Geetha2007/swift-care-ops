@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,7 +22,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       {/* Page Title */}
       <div>
-        <h1 className="text-xl font-semibold text-foreground">{title}</h1>
+        <h1 className="text-xl font-heading font-semibold text-foreground">{title}</h1>
         {subtitle && (
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
@@ -35,8 +35,8 @@ export function Header({ title, subtitle }: HeaderProps) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search..."
-            className="w-64 pl-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+            placeholder="Search clients, services..."
+            className="w-72 pl-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
           />
         </div>
 
@@ -45,57 +45,64 @@ export function Header({ title, subtitle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5 text-muted-foreground" />
-              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center gradient-primary border-0">
                 3
               </Badge>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Notifications
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
               <span className="font-medium">New appointment booked</span>
               <span className="text-xs text-muted-foreground">
-                John Doe - Haircut - Tomorrow at 10:00 AM
+                Emma Wilson - Hair Coloring - Tomorrow at 10:00 AM
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
               <span className="font-medium">Payment received</span>
               <span className="text-xs text-muted-foreground">
-                $150.00 from Sarah Wilson
+                $180.00 from Sophie Davis
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="font-medium">Staff schedule updated</span>
+              <span className="font-medium">5-star review received</span>
               <span className="text-xs text-muted-foreground">
-                Mike changed availability for next week
+                "Amazing service! Will definitely come back."
               </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Salon Name Badge */}
+        <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
+          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+          <span className="text-sm font-medium text-muted-foreground">Luxe Beauty Studio</span>
+        </div>
+
         {/* Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
-              <Avatar className="h-8 w-8">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" />
-                <AvatarFallback>AD</AvatarFallback>
+              <Avatar className="h-8 w-8 ring-2 ring-primary/20">
+                <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" />
+                <AvatarFallback className="bg-primary/10 text-primary">SD</AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">Alex Demo</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
+                <p className="text-sm font-medium">Sarah Demo</p>
+                <p className="text-xs text-muted-foreground">Salon Owner</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+            <DropdownMenuItem>Salon Settings</DropdownMenuItem>
+            <DropdownMenuItem>Subscription</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="text-destructive">
               Log out
