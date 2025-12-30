@@ -1,12 +1,10 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  PieChart,
+  Pie,
   Cell,
+  ResponsiveContainer,
+  Tooltip,
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { servicePerformance } from "@/data/mockData";
@@ -22,54 +20,54 @@ const COLORS = [
 export function ServiceChart() {
   return (
     <Card className="shadow-soft">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Service Performance</CardTitle>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-heading font-semibold">Popular Services</CardTitle>
+        <p className="text-sm text-muted-foreground">Booking distribution by service</p>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={servicePerformance}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
-                horizontal={true}
-                vertical={false}
-              />
-              <XAxis
-                type="number"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                tickFormatter={(value) => `${value}%`}
-              />
-              <YAxis
-                dataKey="name"
-                type="category"
-                axisLine={false}
-                tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
-                width={80}
-              />
+            <PieChart>
+              <Pie
+                data={servicePerformance}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={4}
+                dataKey="value"
+              >
+                {servicePerformance.map((_, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]}
+                    stroke="none"
+                  />
+                ))}
+              </Pie>
               <Tooltip
                 contentStyle={{
                   backgroundColor: "hsl(var(--card))",
                   border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
+                  borderRadius: "12px",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                 }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
-                formatter={(value: number) => [`${value}%`, "Share"]}
+                formatter={(value: number, name: string, entry: any) => [
+                  `${value}% • $${entry.payload.revenue.toLocaleString()}`,
+                  entry.payload.name
+                ]}
               />
-              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
-                {servicePerformance.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Bar>
-            </BarChart>
+              <Legend
+                layout="vertical"
+                align="right"
+                verticalAlign="middle"
+                iconType="circle"
+                iconSize={8}
+                formatter={(value, entry: any) => (
+                  <span className="text-sm text-foreground">{entry.payload.name}</span>
+                )}
+              />
+            </PieChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

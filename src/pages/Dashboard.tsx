@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, Receipt, Users } from "lucide-react";
+import { Calendar, DollarSign, Users, UserCheck } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -11,33 +11,34 @@ export default function Dashboard() {
   return (
     <AppLayout
       title="Dashboard"
-      subtitle="Welcome back! Here's your business overview."
+      subtitle="Welcome back! Here's your salon at a glance."
     >
       <div className="space-y-6 animate-fade-in">
         {/* Stats Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
-            title="Total Appointments"
+            title="Today's Appointments"
             value={stats.totalAppointments}
             change={stats.appointmentsChange}
             icon={Calendar}
+            variant="primary"
           />
           <StatCard
-            title="Revenue"
+            title="Monthly Revenue"
             value={stats.revenue}
             change={stats.revenueChange}
             icon={DollarSign}
             prefix="$"
+            variant="gold"
           />
           <StatCard
-            title="Expenses"
-            value={stats.expenses}
-            change={stats.expensesChange}
-            icon={Receipt}
-            prefix="$"
+            title="Total Customers"
+            value={stats.customers}
+            change={stats.customersChange}
+            icon={UserCheck}
           />
           <StatCard
-            title="Staff Members"
+            title="Active Staff"
             value={stats.staffCount}
             change={stats.staffChange}
             icon={Users}
