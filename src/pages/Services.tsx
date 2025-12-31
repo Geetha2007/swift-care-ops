@@ -1,56 +1,36 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Star, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Star } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useServices, Service } from "@/hooks/useServices";
-import { useAuth } from "@/contexts/AuthContext";
-import { BookingModal } from "@/components/booking/BookingModal";
+import { services } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 
 const categoryColors: Record<string, string> = {
   Hair: "bg-primary/10 text-primary border-primary/20",
-  Treatment: "bg-success/10 text-success border-success/20",
+  Skin: "bg-success/10 text-success border-success/20",
   Nails: "bg-warning/10 text-warning border-warning/20",
-  Skincare: "bg-secondary/10 text-secondary border-secondary/20",
-  Massage: "bg-chart-5/10 text-chart-5 border-chart-5/20",
+  Body: "bg-secondary/10 text-secondary border-secondary/20",
+  Makeup: "bg-chart-5/10 text-chart-5 border-chart-5/20",
 };
 
 export default function Services() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [bookingService, setBookingService] = useState<Service | null>(null);
 
-  const { data: services, isLoading, error } = useServices();
-  const { isAdmin } = useAuth();
+  const categories = [...new Set(services.map((s) => s.category))];
 
-  const categories = services ? [...new Set(services.map((s) => s.category))] : [];
-
-  const filteredServices = services?.filter((service) => {
+  const filteredServices = services.filter((service) => {
     const matchesCategory = !selectedCategory || service.category === selectedCategory;
-    const matchesSearch =
-      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (service.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    const matchesSearch = service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         service.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
-  }) ?? [];
-
-  if (error) {
-    return (
-      <AppLayout title="Services" subtitle="Manage your salon service menu">
-        <Card className="shadow-soft">
-          <CardContent className="p-12 text-center">
-            <p className="text-destructive">Failed to load services. Please try again.</p>
-          </CardContent>
-        </Card>
-      </AppLayout>
-    );
-  }
+  });
 
   return (
-    <AppLayout title="Services" subtitle={isAdmin ? "Manage your salon service menu" : "Browse and book our services"}>
+    <AppLayout title="Services" subtitle="Manage your salon service menu">
       <div className="space-y-6 animate-fade-in">
         {/* Header with Search and Add */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -63,11 +43,9 @@ export default function Services() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          {isAdmin && (
-            <Button className="gradient-primary shadow-luxury">
-              <Plus className="mr-2 h-4 w-4" /> Add Service
-            </Button>
-          )}
+          <Button className="gradient-primary shadow-luxury">
+            <Plus className="mr-2 h-4 w-4" /> Add Service
+          </Button>
         </div>
 
         {/* Category Filters */}
@@ -93,94 +71,66 @@ export default function Services() {
           ))}
         </div>
 
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(8)].map((_, i) => (
-              <Card key={i} className="shadow-soft">
-                <CardContent className="p-5 space-y-4">
-                  <Skeleton className="h-40 w-full rounded-lg" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          /* Services Grid */
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredServices.map((service) => (
-              <Card
-                key={service.id}
-                className="shadow-soft hover-lift group relative overflow-hidden"
-              >
-                {/* Service Image */}
-                {service.image_url && (
-                  <div className="h-40 overflow-hidden">
-                    <img
-                      src={service.image_url}
-                      alt={service.name}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
+        {/* Services Grid */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredServices.map((service) => (
+            <Card
+              key={service.id}
+              className={cn(
+                "shadow-soft hover-lift group relative overflow-hidden",
+                service.popular && "ring-1 ring-primary/30"
+              )}
+            >
+              {service.popular && (
+                <div className="absolute top-3 right-3">
+                  <Badge className="gradient-gold text-white border-0 gap-1">
+                    <Star className="h-3 w-3 fill-white" /> Popular
+                  </Badge>
+                </div>
+              )}
+              <CardContent className="p-5">
+                <div className="space-y-4">
+                  <div>
+                    <Badge
+                      variant="outline"
+                      className={cn("text-xs mb-2", categoryColors[service.category])}
+                    >
+                      {service.category}
+                    </Badge>
+                    <h3 className="font-heading font-semibold text-foreground">{service.name}</h3>
+                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                      {service.description}
+                    </p>
                   </div>
-                )}
-                <CardContent className="p-5">
-                  <div className="space-y-4">
-                    <div>
-                      <Badge
-                        variant="outline"
-                        className={cn("text-xs mb-2", categoryColors[service.category] || "bg-muted")}
-                      >
-                        {service.category}
-                      </Badge>
-                      <h3 className="font-heading font-semibold text-foreground">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {service.description}
-                      </p>
-                    </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 text-sm">
-                          <DollarSign className="h-4 w-4 text-primary" />
-                          <span className="font-heading font-semibold text-foreground">
-                            {Number(service.price).toFixed(0)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Clock className="h-3.5 w-3.5" />
-                          <span>{service.duration}min</span>
-                        </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-border">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-sm">
+                        <DollarSign className="h-4 w-4 text-primary" />
+                        <span className="font-heading font-semibold text-foreground">{service.price}</span>
                       </div>
-
-                      {isAdmin ? (
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          className="gradient-primary"
-                          onClick={() => setBookingService(service)}
-                        >
-                          <Calendar className="mr-1 h-3.5 w-3.5" /> Book
-                        </Button>
-                      )}
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{service.duration}min</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Edit2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-        {!isLoading && filteredServices.length === 0 && (
+        {filteredServices.length === 0 && (
           <Card className="shadow-soft">
             <CardContent className="p-12 text-center">
               <Sparkles className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -190,15 +140,6 @@ export default function Services() {
           </Card>
         )}
       </div>
-
-      {/* Booking Modal */}
-      {bookingService && (
-        <BookingModal
-          open={!!bookingService}
-          onOpenChange={(open) => !open && setBookingService(null)}
-          service={bookingService}
-        />
-      )}
     </AppLayout>
   );
 }

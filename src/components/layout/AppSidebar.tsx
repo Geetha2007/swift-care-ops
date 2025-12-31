@@ -21,16 +21,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useAuth } from "@/contexts/AuthContext";
 
-const customerNavItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Appointments", url: "/appointments", icon: Calendar },
-  { title: "Services", url: "/services", icon: Scissors },
-  { title: "Stylists", url: "/staff", icon: Users },
-];
-
-const adminNavItems = [
+const navItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Services", url: "/services", icon: Scissors },
@@ -47,15 +39,8 @@ const bottomNavItems = [
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { isAdmin, signOut } = useAuth();
-
-  const navItems = isAdmin ? adminNavItems : customerNavItems;
 
   const isActive = (path: string) => location.pathname === path;
-
-  const handleLogout = async () => {
-    await signOut();
-  };
 
   const NavItem = ({ item }: { item: typeof navItems[0] }) => {
     const active = isActive(item.url);
@@ -109,7 +94,7 @@ export function AppSidebar() {
                 Salon Smart
               </span>
               <span className="text-[10px] text-muted-foreground -mt-1">
-                {isAdmin ? "Admin Panel" : "Customer Portal"}
+                Premium Management
               </span>
             </div>
           )}
@@ -140,19 +125,19 @@ export function AppSidebar() {
         {bottomNavItems.map((item) => (
           <NavItem key={item.title} item={item} />
         ))}
-
+        
         <Tooltip delayDuration={0}>
           <TooltipTrigger asChild>
-            <button
-              onClick={handleLogout}
+            <Link
+              to="/"
               className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                 "text-destructive hover:bg-destructive/10"
               )}
             >
               <LogOut className="h-5 w-5 flex-shrink-0" />
               {!collapsed && <span>Logout</span>}
-            </button>
+            </Link>
           </TooltipTrigger>
           {collapsed && (
             <TooltipContent side="right" className="font-medium">
