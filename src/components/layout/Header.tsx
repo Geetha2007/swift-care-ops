@@ -1,4 +1,5 @@
-import { Bell, Search, Sparkles } from "lucide-react";
+import { Bell, Search, Sparkles, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HeaderProps {
   title: string;
@@ -18,6 +20,17 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const userInitials = user?.email?.charAt(0).toUpperCase() || "U";
+  const userEmail = user?.email || "Guest";
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
       {/* Page Title */}
@@ -77,10 +90,19 @@ export function Header({ title, subtitle }: HeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Salon Name Badge */}
+        {/* Role Badge */}
         <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted">
-          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-          <span className="text-sm font-medium text-muted-foreground">Luxe Beauty Studio</span>
+          {isAdmin ? (
+            <>
+              <Shield className="h-3.5 w-3.5 text-primary" />
+              <span className="text-sm font-medium text-primary">Admin</span>
+            </>
+          ) : (
+            <>
+              <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+              <span className="text-sm font-medium text-muted-foreground">Customer</span>
+            </>
+          )}
         </div>
 
         {/* Profile */}
@@ -88,12 +110,12 @@ export function Header({ title, subtitle }: HeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <Avatar className="h-8 w-8 ring-2 ring-primary/20">
-                <AvatarImage src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" />
-                <AvatarFallback className="bg-primary/10 text-primary">SD</AvatarFallback>
+                <AvatarImage src="" />
+                <AvatarFallback className="bg-primary/10 text-primary">{userInitials}</AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium">Sarah Demo</p>
-                <p className="text-xs text-muted-foreground">Salon Owner</p>
+                <p className="text-sm font-medium">{userEmail}</p>
+                <p className="text-xs text-muted-foreground">{isAdmin ? "Admin" : "Customer"}</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -101,10 +123,9 @@ export function Header({ title, subtitle }: HeaderProps) {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile Settings</DropdownMenuItem>
-            <DropdownMenuItem>Salon Settings</DropdownMenuItem>
-            <DropdownMenuItem>Subscription</DropdownMenuItem>
+            <DropdownMenuItem>My Appointments</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
