@@ -1,33 +1,111 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Sparkles, Mail, Lock, Star } from "lucide-react";
+import { Eye, EyeOff, Sparkles, Mail, Lock, Star, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+const signupSchema = loginSchema.extend({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+});
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, signIn, signUp } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
     setIsLoading(true);
-    
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Welcome back!",
-      description: "You have successfully logged in to Salon Smart.",
-    });
-    
-    setIsLoading(false);
-    navigate("/dashboard");
+
+    try {
+      if (isSignUp) {
+        const result = signupSchema.safeParse({ email, password, fullName });
+        if (!result.success) {
+          const fieldErrors: Record<string, string> = {};
+          result.error.errors.forEach((err) => {
+            if (err.path[0]) {
+              fieldErrors[err.path[0] as string] = err.message;
+            }
+          });
+          setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await signUp(email, password, fullName);
+        if (error) {
+          toast({
+            title: "Sign up failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Account created!",
+            description: "Welcome to Salon Smart. You can now book appointments.",
+          });
+        }
+      } else {
+        const result = loginSchema.safeParse({ email, password });
+        if (!result.success) {
+          const fieldErrors: Record<string, string> = {};
+          result.error.errors.forEach((err) => {
+            if (err.path[0]) {
+              fieldErrors[err.path[0] as string] = err.message;
+            }
+          });
+          setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Welcome back!",
+            description: "You have successfully logged in to Salon Smart.",
+          });
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,11 +117,10 @@ export default function Login() {
           <div className="absolute top-20 left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute bottom-32 right-20 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
           <div className="absolute top-1/2 left-1/3 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
-          {/* Gold accent circles */}
           <div className="absolute top-40 right-32 w-24 h-24 rounded-full border-2 border-white/20" />
           <div className="absolute bottom-48 left-32 w-16 h-16 rounded-full border border-white/15" />
         </div>
-        
+
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-16 text-primary-foreground">
           <div className="flex items-center gap-3 mb-8">
@@ -55,15 +132,15 @@ export default function Login() {
               <p className="text-sm text-white/70">Premium Management</p>
             </div>
           </div>
-          
+
           <h1 className="text-4xl font-heading font-bold mb-4 leading-tight">
             Elevate Your<br />Beauty Business
           </h1>
           <p className="text-lg text-white/80 max-w-md leading-relaxed">
-            The premium salon management platform trusted by top beauty professionals. 
+            The premium salon management platform trusted by top beauty professionals.
             Streamline bookings, delight clients, and grow your revenue.
           </p>
-          
+
           <div className="mt-12 flex gap-8">
             <div>
               <p className="text-3xl font-bold">5K+</p>
@@ -86,9 +163,9 @@ export default function Login() {
               "Salon Smart transformed how we run our spa. Bookings are up 40% and our clients love the seamless experience."
             </p>
             <div className="flex items-center gap-3">
-              <img 
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face" 
-                alt="Client" 
+              <img
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face"
+                alt="Client"
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div>
@@ -113,15 +190,35 @@ export default function Login() {
               <p className="text-xs text-muted-foreground">Premium Management</p>
             </div>
           </div>
-          
+
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-heading font-bold text-foreground">Welcome back</h2>
+            <h2 className="text-2xl font-heading font-bold text-foreground">
+              {isSignUp ? "Create an account" : "Welcome back"}
+            </h2>
             <p className="text-muted-foreground mt-2">
-              Sign in to manage your salon
+              {isSignUp ? "Sign up to book appointments" : "Sign in to manage your salon"}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    type="text"
+                    placeholder="Your full name"
+                    className="pl-10"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                  />
+                </div>
+                {errors.fullName && <p className="text-sm text-destructive">{errors.fullName}</p>}
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -129,13 +226,13 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@salon.com"
+                  placeholder="name@example.com"
                   className="pl-10"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  required
                 />
               </div>
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
             <div className="space-y-2">
@@ -149,7 +246,6 @@ export default function Login() {
                   className="pl-10 pr-10"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  required
                 />
                 <Button
                   type="button"
@@ -165,22 +261,16 @@ export default function Login() {
                   )}
                 </Button>
               </div>
+              {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Checkbox id="remember" />
-                <label
-                  htmlFor="remember"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Remember me
-                </label>
+            {!isSignUp && (
+              <div className="flex items-center justify-end">
+                <Button variant="link" className="px-0 text-primary">
+                  Forgot password?
+                </Button>
               </div>
-              <Button variant="link" className="px-0 text-primary">
-                Forgot password?
-              </Button>
-            </div>
+            )}
 
             <Button
               type="submit"
@@ -188,7 +278,7 @@ export default function Login() {
               size="lg"
               disabled={isLoading}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {isLoading ? (isSignUp ? "Creating account..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign in")}
             </Button>
           </form>
 
@@ -198,13 +288,21 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                New to Salon Smart?
+                {isSignUp ? "Already have an account?" : "New to Salon Smart?"}
               </span>
             </div>
           </div>
 
-          <Button variant="outline" className="w-full" size="lg">
-            Start your free trial
+          <Button
+            variant="outline"
+            className="w-full"
+            size="lg"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setErrors({});
+            }}
+          >
+            {isSignUp ? "Sign in instead" : "Create an account"}
           </Button>
         </div>
       </div>
