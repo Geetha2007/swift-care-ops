@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { Calendar, Clock, User, Sparkles, Check, ChevronRight, ChevronLeft } from "lucide-react";
+import { Calendar, Clock, User, Sparkles, Check, ChevronRight, ChevronLeft, Scissors } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -10,15 +10,16 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useStylists, Stylist } from "@/hooks/useStylists";
+import { useServices, Service } from "@/hooks/useServices";
 import { useCreateAppointment } from "@/hooks/useAppointments";
-import { Service } from "@/hooks/useServices";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 interface BookingModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  service: Service;
+  service?: Service;
+  showServiceSelection?: boolean;
 }
 
 const timeSlots = [
@@ -27,21 +28,24 @@ const timeSlots = [
   "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
 ];
 
-type Step = "stylist" | "datetime" | "confirm";
+type Step = "service" | "stylist" | "datetime" | "confirm";
 
-export function BookingModal({ open, onOpenChange, service }: BookingModalProps) {
-  const [step, setStep] = useState<Step>("stylist");
+export function BookingModal({ open, onOpenChange, service, showServiceSelection = false }: BookingModalProps) {
+  const [step, setStep] = useState<Step>(showServiceSelection ? "service" : "stylist");
+  const [selectedService, setSelectedService] = useState<Service | null>(service || null);
   const [selectedStylist, setSelectedStylist] = useState<Stylist | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
 
+  const { data: services, isLoading: servicesLoading } = useServices();
   const { data: stylists, isLoading: stylistsLoading } = useStylists();
   const createAppointment = useCreateAppointment();
   const { toast } = useToast();
 
   const handleClose = () => {
-    setStep("stylist");
+    setStep(showServiceSelection ? "service" : "stylist");
+    setSelectedService(service || null);
     setSelectedStylist(null);
     setSelectedDate(undefined);
     setSelectedTime(null);
@@ -50,11 +54,11 @@ export function BookingModal({ open, onOpenChange, service }: BookingModalProps)
   };
 
   const handleBook = async () => {
-    if (!selectedStylist || !selectedDate || !selectedTime) return;
+    if (!selectedService || !selectedStylist || !selectedDate || !selectedTime) return;
 
     try {
       await createAppointment.mutateAsync({
-        service_id: service.id,
+        service_id: selectedService.id,
         stylist_id: selectedStylist.id,
         appointment_date: format(selectedDate, "yyyy-MM-dd"),
         appointment_time: selectedTime,
@@ -63,7 +67,7 @@ export function BookingModal({ open, onOpenChange, service }: BookingModalProps)
 
       toast({
         title: "Appointment Booked!",
-        description: `Your ${service.name} appointment with ${selectedStylist.name} is confirmed.`,
+        description: `Your ${selectedService.name} appointment with ${selectedStylist.name} is confirmed.`,
       });
       handleClose();
     } catch (error) {
@@ -77,9 +81,60 @@ export function BookingModal({ open, onOpenChange, service }: BookingModalProps)
 
   const renderStep = () => {
     switch (step) {
+      case "service":
+        return (
+          <div className="space-y-4">
+            <p className="text-muted-foreground">Choose the service you'd like to book.</p>
+            {servicesLoading ? (
+              <div className="text-center py-8">Loading services...</div>
+            ) : (
+              <div className="grid gap-3 max-h-[400px] overflow-y-auto">
+                {services?.map((svc) => (
+                  <Card
+                    key={svc.id}
+                    className={cn(
+                      "cursor-pointer transition-all hover:shadow-md",
+                      selectedService?.id === svc.id && "ring-2 ring-primary shadow-md"
+                    )}
+                    onClick={() => setSelectedService(svc)}
+                  >
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Scissors className="h-6 w-6 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{svc.name}</h4>
+                        <p className="text-sm text-muted-foreground">{svc.category} • {svc.duration} min</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-heading font-semibold text-primary">${Number(svc.price).toFixed(0)}</p>
+                      </div>
+                      {selectedService?.id === svc.id && (
+                        <Check className="h-5 w-5 text-primary" />
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+            <Button
+              className="w-full gradient-primary"
+              disabled={!selectedService}
+              onClick={() => setStep("stylist")}
+            >
+              Continue <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        );
+
       case "stylist":
         return (
           <div className="space-y-4">
+            {showServiceSelection && (
+              <Button variant="ghost" size="sm" onClick={() => setStep("service")} className="mb-2">
+                <ChevronLeft className="mr-2 h-4 w-4" /> Back to Services
+              </Button>
+            )}
             <p className="text-muted-foreground">Choose your preferred stylist for this service.</p>
             {stylistsLoading ? (
               <div className="text-center py-8">Loading stylists...</div>
@@ -195,8 +250,8 @@ export function BookingModal({ open, onOpenChange, service }: BookingModalProps)
                     <Sparkles className="h-6 w-6 text-primary-foreground" />
                   </div>
                   <div>
-                    <h4 className="font-semibold">{service.name}</h4>
-                    <p className="text-sm text-muted-foreground">${service.price} • {service.duration} min</p>
+                    <h4 className="font-semibold">{selectedService?.name}</h4>
+                    <p className="text-sm text-muted-foreground">${selectedService?.price} • {selectedService?.duration} min</p>
                   </div>
                 </div>
 
@@ -241,6 +296,8 @@ export function BookingModal({ open, onOpenChange, service }: BookingModalProps)
 
   const getStepTitle = () => {
     switch (step) {
+      case "service":
+        return "Choose a Service";
       case "stylist":
         return "Choose Your Stylist";
       case "datetime":

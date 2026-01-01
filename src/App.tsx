@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Appointments from "./pages/Appointments";
+import MyAppointments from "./pages/MyAppointments";
 import Services from "./pages/Services";
 import Staff from "./pages/Staff";
 import Billing from "./pages/Billing";
@@ -37,8 +38,16 @@ const App = () => (
             <Route
               path="/appointments"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute adminOnly>
                   <Appointments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-appointments"
+              element={
+                <ProtectedRoute>
+                  <MyAppointments />
                 </ProtectedRoute>
               }
             />

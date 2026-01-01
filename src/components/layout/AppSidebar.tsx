@@ -25,14 +25,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const customerNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Appointments", url: "/appointments", icon: Calendar },
+  { title: "My Appointments", url: "/my-appointments", icon: Calendar },
   { title: "Services", url: "/services", icon: Scissors },
   { title: "Stylists", url: "/staff", icon: Users },
 ];
 
 const adminNavItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Appointments", url: "/appointments", icon: Calendar },
+  { title: "All Appointments", url: "/appointments", icon: Calendar },
   { title: "Services", url: "/services", icon: Scissors },
   { title: "Staff", url: "/staff", icon: Users },
   { title: "Billing", url: "/billing", icon: CreditCard },
