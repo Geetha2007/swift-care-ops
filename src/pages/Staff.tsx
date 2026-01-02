@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Mail, Phone, Star, Calendar, Edit2, Sparkles } from "lucide-react";
+import { Plus, Mail, Phone, Star, Edit2, Sparkles } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,10 +9,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useStylists } from "@/hooks/useStylists";
 import { useAuth } from "@/contexts/AuthContext";
 import { AddStaffModal } from "@/components/staff/AddStaffModal";
+import { EditStaffModal } from "@/components/staff/EditStaffModal";
 import { cn } from "@/lib/utils";
+
+interface Stylist {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: string;
+  specialties: string[] | null;
+  is_available: boolean | null;
+  avatar_url: string | null;
+  rating: number | null;
+}
 
 export default function Staff() {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<Stylist | null>(null);
   const { data: stylists, isLoading, error } = useStylists();
   const { isAdmin } = useAuth();
 
@@ -72,6 +86,7 @@ export default function Staff() {
                         variant="ghost"
                         size="icon"
                         className="absolute top-2 right-2 h-8 w-8 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setEditingStaff(member as Stylist)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -162,6 +177,13 @@ export default function Staff() {
 
       {/* Add Staff Modal */}
       <AddStaffModal open={showAddModal} onOpenChange={setShowAddModal} />
+      
+      {/* Edit Staff Modal */}
+      <EditStaffModal 
+        open={!!editingStaff} 
+        onOpenChange={(open) => !open && setEditingStaff(null)} 
+        staff={editingStaff}
+      />
     </AppLayout>
   );
 }
