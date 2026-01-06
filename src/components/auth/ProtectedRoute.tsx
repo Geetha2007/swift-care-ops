@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -10,11 +11,14 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
   const { user, isLoading, isAdmin } = useAuth();
 
-  // Demo mode: minimal loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="space-y-4 w-full max-w-md p-8">
+          <Skeleton className="h-8 w-48 mx-auto" />
+          <Skeleton className="h-4 w-32 mx-auto" />
+          <Skeleton className="h-64 w-full" />
+        </div>
       </div>
     );
   }

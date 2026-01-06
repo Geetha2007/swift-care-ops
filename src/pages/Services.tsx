@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Star, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useServices, Service } from "@/hooks/useServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookingModal } from "@/components/booking/BookingModal";
-import { ServiceModal } from "@/components/services/ServiceModal";
 import { cn } from "@/lib/utils";
 
 const categoryColors: Record<string, string> = {
@@ -24,8 +23,6 @@ export default function Services() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [bookingService, setBookingService] = useState<Service | null>(null);
-  const [serviceModalOpen, setServiceModalOpen] = useState(false);
-  const [editingService, setEditingService] = useState<Service | null>(null);
 
   const { data: services, isLoading, error } = useServices();
   const { isAdmin } = useAuth();
@@ -39,16 +36,6 @@ export default function Services() {
       (service.description?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
     return matchesCategory && matchesSearch;
   }) ?? [];
-
-  const handleAddService = () => {
-    setEditingService(null);
-    setServiceModalOpen(true);
-  };
-
-  const handleEditService = (service: Service) => {
-    setEditingService(service);
-    setServiceModalOpen(true);
-  };
 
   if (error) {
     return (
@@ -77,7 +64,7 @@ export default function Services() {
             />
           </div>
           {isAdmin && (
-            <Button className="gradient-primary shadow-luxury" onClick={handleAddService}>
+            <Button className="gradient-primary shadow-luxury">
               <Plus className="mr-2 h-4 w-4" /> Add Service
             </Button>
           )}
@@ -169,13 +156,11 @@ export default function Services() {
 
                       {isAdmin ? (
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => handleEditService(service)}
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Edit2 className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       ) : (
@@ -200,14 +185,7 @@ export default function Services() {
             <CardContent className="p-12 text-center">
               <Sparkles className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
               <p className="text-muted-foreground font-medium">No services found</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {isAdmin ? "Add your first service to get started" : "Try adjusting your search or filters"}
-              </p>
-              {isAdmin && (
-                <Button className="mt-4 gradient-primary" onClick={handleAddService}>
-                  <Plus className="mr-2 h-4 w-4" /> Add Your First Service
-                </Button>
-              )}
+              <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
             </CardContent>
           </Card>
         )}
@@ -221,14 +199,6 @@ export default function Services() {
           service={bookingService}
         />
       )}
-
-      {/* Service Add/Edit Modal */}
-      <ServiceModal
-        open={serviceModalOpen}
-        onOpenChange={setServiceModalOpen}
-        service={editingService}
-        mode={editingService ? "edit" : "add"}
-      />
     </AppLayout>
   );
 }
