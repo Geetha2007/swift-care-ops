@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { appointments as mockAppointments } from "@/data/mockData";
 
 export interface Appointment {
   id: string;
@@ -24,33 +23,41 @@ export interface Appointment {
   };
 }
 
+// In-memory store for demo mode
+let appointmentsStore: Appointment[] = mockAppointments.map((apt) => ({
+  id: apt.id,
+  customer_id: "demo-user",
+  service_id: apt.id,
+  stylist_id: apt.id,
+  appointment_date: apt.date,
+  appointment_time: apt.time,
+  status: apt.status,
+  notes: null,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  services: {
+    name: apt.service,
+    price: apt.price,
+    duration: apt.duration,
+  },
+  stylists: {
+    name: apt.staff,
+    avatar_url: apt.staffAvatar,
+  },
+}));
+
 export function useAppointments() {
-  const { user } = useAuth();
-
   return useQuery({
-    queryKey: ["appointments", user?.id],
+    queryKey: ["appointments"],
     queryFn: async () => {
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from("appointments")
-        .select(`
-          *,
-          services (name, price, duration),
-          stylists (name, avatar_url)
-        `)
-        .order("appointment_date", { ascending: true });
-
-      if (error) throw error;
-      return data as Appointment[];
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [...appointmentsStore];
     },
-    enabled: !!user,
   });
 }
 
 export function useCreateAppointment() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (appointment: {
@@ -60,19 +67,47 @@ export function useCreateAppointment() {
       appointment_time: string;
       notes?: string;
     }) => {
-      if (!user) throw new Error("Not authenticated");
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const newAppointment: Appointment = {
+        id: `apt-${Date.now()}`,
+        customer_id: "demo-user",
+        service_id: appointment.service_id,
+        stylist_id: appointment.stylist_id,
+        appointment_date: appointment.appointment_date,
+        appointment_time: appointment.appointment_time,
+        status: "pending",
+        notes: appointment.notes || null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        services: {
+          name: "Booked Service",
+          price: 100,
+          duration: 60,
+        },
+        stylists: {
+          name: "Selected Stylist",
+          avatar_url: null,
+        },
+      };
+      appointmentsStore = [...appointmentsStore, newAppointment];
+      return newAppointment;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+  });
+}
 
-      const { data, error } = await supabase
-        .from("appointments")
-        .insert({
-          ...appointment,
-          customer_id: user.id,
-        })
-        .select()
-        .single();
+export function useUpdateAppointment() {
+  const queryClient = useQueryClient();
 
-      if (error) throw error;
-      return data;
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      appointmentsStore = appointmentsStore.map((apt) =>
+        apt.id === id ? { ...apt, status, updated_at: new Date().toISOString() } : apt
+      );
+      return appointmentsStore.find((apt) => apt.id === id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
@@ -85,12 +120,10 @@ export function useCancelAppointment() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ status: "cancelled" })
-        .eq("id", id);
-
-      if (error) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      appointmentsStore = appointmentsStore.map((apt) =>
+        apt.id === id ? { ...apt, status: "cancelled", updated_at: new Date().toISOString() } : apt
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["appointments"] });

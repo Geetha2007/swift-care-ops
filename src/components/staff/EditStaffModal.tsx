@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useUpdateStylist, useDeleteStylist } from "@/hooks/useStylists";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +31,6 @@ interface EditStaffModalProps {
 }
 
 export function EditStaffModal({ open, onOpenChange, staff }: EditStaffModalProps) {
-  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -41,6 +39,9 @@ export function EditStaffModal({ open, onOpenChange, staff }: EditStaffModalProp
     specialties: "",
     is_available: true,
   });
+
+  const updateStaffMutation = useUpdateStylist();
+  const deleteStaffMutation = useDeleteStylist();
 
   useEffect(() => {
     if (staff) {
@@ -55,55 +56,47 @@ export function EditStaffModal({ open, onOpenChange, staff }: EditStaffModalProp
     }
   }, [staff]);
 
-  const updateStaffMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      if (!staff) return;
-      const { error } = await supabase
-        .from("stylists")
-        .update({
-          name: data.name,
-          email: data.email || null,
-          phone: data.phone || null,
-          role: data.role,
-          specialties: data.specialties ? data.specialties.split(",").map(s => s.trim()) : null,
-          is_available: data.is_available,
-        })
-        .eq("id", staff.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stylists"] });
-      toast.success("Staff member updated successfully!");
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const deleteStaffMutation = useMutation({
-    mutationFn: async () => {
-      if (!staff) return;
-      const { error } = await supabase.from("stylists").delete().eq("id", staff.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stylists"] });
-      toast.success("Staff member deleted successfully!");
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
       toast.error("Name is required");
       return;
     }
-    updateStaffMutation.mutate(formData);
+    if (!staff) return;
+
+    updateStaffMutation.mutate(
+      {
+        id: staff.id,
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        role: formData.role,
+        specialties: formData.specialties ? formData.specialties.split(",").map(s => s.trim()) : null,
+        is_available: formData.is_available,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Staff member updated successfully!");
+          onOpenChange(false);
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
+
+  const handleDelete = () => {
+    if (!staff) return;
+    deleteStaffMutation.mutate(staff.id, {
+      onSuccess: () => {
+        toast.success("Staff member deleted successfully!");
+        onOpenChange(false);
+      },
+      onError: (error: Error) => {
+        toast.error(error.message);
+      },
+    });
   };
 
   return (
@@ -178,7 +171,7 @@ export function EditStaffModal({ open, onOpenChange, staff }: EditStaffModalProp
             <Button
               type="button"
               variant="destructive"
-              onClick={() => deleteStaffMutation.mutate()}
+              onClick={handleDelete}
               disabled={deleteStaffMutation.isPending}
             >
               {deleteStaffMutation.isPending ? "Deleting..." : "Delete"}

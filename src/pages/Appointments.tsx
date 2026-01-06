@@ -7,9 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useAppointments, Appointment } from "@/hooks/useAppointments";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useAppointments, useUpdateAppointment, Appointment } from "@/hooks/useAppointments";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -23,9 +21,9 @@ const statusStyles: Record<string, string> = {
 export default function Appointments() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-  const queryClient = useQueryClient();
 
   const { data: appointments, isLoading, error } = useAppointments();
+  const updateStatusMutation = useUpdateAppointment();
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -35,22 +33,19 @@ export default function Appointments() {
     ? appointments.filter((apt) => isSameDay(parseISO(apt.appointment_date), selectedDate))
     : appointments || [];
 
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("appointments")
-        .update({ status })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["appointments"] });
-      toast.success("Appointment status updated!");
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+  const handleUpdateStatus = (id: string, status: string) => {
+    updateStatusMutation.mutate(
+      { id, status },
+      {
+        onSuccess: () => {
+          toast.success("Appointment status updated!");
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
 
   if (error) {
     return (
@@ -199,7 +194,7 @@ export default function Appointments() {
                             size="sm"
                             variant="outline"
                             className="flex-1 text-success hover:text-success hover:bg-success/10"
-                            onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "confirmed" })}
+                            onClick={() => handleUpdateStatus(apt.id, "confirmed")}
                             disabled={updateStatusMutation.isPending}
                           >
                             {updateStatusMutation.isPending ? (
@@ -213,7 +208,7 @@ export default function Appointments() {
                             size="sm"
                             variant="outline"
                             className="flex-1 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "cancelled" })}
+                            onClick={() => handleUpdateStatus(apt.id, "cancelled")}
                             disabled={updateStatusMutation.isPending}
                           >
                             {updateStatusMutation.isPending ? (
@@ -231,7 +226,7 @@ export default function Appointments() {
                             size="sm"
                             variant="outline"
                             className="flex-1"
-                            onClick={() => updateStatusMutation.mutate({ id: apt.id, status: "completed" })}
+                            onClick={() => handleUpdateStatus(apt.id, "completed")}
                             disabled={updateStatusMutation.isPending}
                           >
                             {updateStatusMutation.isPending ? (
