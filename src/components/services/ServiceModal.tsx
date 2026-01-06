@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useCreateService, useUpdateService, useDeleteService, Service } from "@/hooks/useServices";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +19,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Service } from "@/hooks/useServices";
 
 interface ServiceModalProps {
   open: boolean;
@@ -32,7 +30,6 @@ interface ServiceModalProps {
 const categories = ["Hair", "Treatment", "Nails", "Skincare", "Massage"];
 
 export function ServiceModal({ open, onOpenChange, service, mode }: ServiceModalProps) {
-  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -42,6 +39,10 @@ export function ServiceModal({ open, onOpenChange, service, mode }: ServiceModal
     image_url: "",
     is_active: true,
   });
+
+  const createServiceMutation = useCreateService();
+  const updateServiceMutation = useUpdateService();
+  const deleteServiceMutation = useDeleteService();
 
   useEffect(() => {
     if (service && mode === "edit") {
@@ -67,72 +68,6 @@ export function ServiceModal({ open, onOpenChange, service, mode }: ServiceModal
     }
   }, [service, mode, open]);
 
-  const createServiceMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from("services").insert({
-        name: data.name,
-        description: data.description || null,
-        price: parseFloat(data.price),
-        duration: parseInt(data.duration),
-        category: data.category,
-        image_url: data.image_url || null,
-        is_active: data.is_active,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-      toast.success("Service added successfully!");
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const updateServiceMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      if (!service) return;
-      const { error } = await supabase
-        .from("services")
-        .update({
-          name: data.name,
-          description: data.description || null,
-          price: parseFloat(data.price),
-          duration: parseInt(data.duration),
-          category: data.category,
-          image_url: data.image_url || null,
-          is_active: data.is_active,
-        })
-        .eq("id", service.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-      toast.success("Service updated successfully!");
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
-  const deleteServiceMutation = useMutation({
-    mutationFn: async () => {
-      if (!service) return;
-      const { error } = await supabase.from("services").delete().eq("id", service.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["services"] });
-      toast.success("Service deleted successfully!");
-      onOpenChange(false);
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) {
@@ -148,11 +83,53 @@ export function ServiceModal({ open, onOpenChange, service, mode }: ServiceModal
       return;
     }
 
+    const serviceData = {
+      name: formData.name,
+      description: formData.description || null,
+      price: parseFloat(formData.price),
+      duration: parseInt(formData.duration),
+      category: formData.category,
+      image_url: formData.image_url || null,
+      is_active: formData.is_active,
+    };
+
     if (mode === "add") {
-      createServiceMutation.mutate(formData);
-    } else {
-      updateServiceMutation.mutate(formData);
+      createServiceMutation.mutate(serviceData, {
+        onSuccess: () => {
+          toast.success("Service added successfully!");
+          onOpenChange(false);
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+        },
+      });
+    } else if (service) {
+      updateServiceMutation.mutate(
+        { id: service.id, ...serviceData },
+        {
+          onSuccess: () => {
+            toast.success("Service updated successfully!");
+            onOpenChange(false);
+          },
+          onError: (error: Error) => {
+            toast.error(error.message);
+          },
+        }
+      );
     }
+  };
+
+  const handleDelete = () => {
+    if (!service) return;
+    deleteServiceMutation.mutate(service.id, {
+      onSuccess: () => {
+        toast.success("Service deleted successfully!");
+        onOpenChange(false);
+      },
+      onError: (error: Error) => {
+        toast.error(error.message);
+      },
+    });
   };
 
   const isPending = createServiceMutation.isPending || updateServiceMutation.isPending;
@@ -260,7 +237,7 @@ export function ServiceModal({ open, onOpenChange, service, mode }: ServiceModal
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => deleteServiceMutation.mutate()}
+                onClick={handleDelete}
                 disabled={deleteServiceMutation.isPending}
               >
                 {deleteServiceMutation.isPending ? "Deleting..." : "Delete"}

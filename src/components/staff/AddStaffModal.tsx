@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useCreateStylist } from "@/hooks/useStylists";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +18,6 @@ interface AddStaffModalProps {
 }
 
 export function AddStaffModal({ open, onOpenChange }: AddStaffModalProps) {
-  const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,35 +27,7 @@ export function AddStaffModal({ open, onOpenChange }: AddStaffModalProps) {
     is_available: true,
   });
 
-  const createStaffMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const { error } = await supabase.from("stylists").insert({
-        name: data.name,
-        email: data.email || null,
-        phone: data.phone || null,
-        role: data.role,
-        specialties: data.specialties ? data.specialties.split(",").map(s => s.trim()) : null,
-        is_available: data.is_available,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["stylists"] });
-      toast.success("Staff member added successfully!");
-      onOpenChange(false);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        role: "Stylist",
-        specialties: "",
-        is_available: true,
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message);
-    },
-  });
+  const createStaffMutation = useCreateStylist();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +35,35 @@ export function AddStaffModal({ open, onOpenChange }: AddStaffModalProps) {
       toast.error("Name is required");
       return;
     }
-    createStaffMutation.mutate(formData);
+    createStaffMutation.mutate(
+      {
+        name: formData.name,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        role: formData.role,
+        specialties: formData.specialties ? formData.specialties.split(",").map(s => s.trim()) : null,
+        is_available: formData.is_available,
+        avatar_url: null,
+        rating: 5.0,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Staff member added successfully!");
+          onOpenChange(false);
+          setFormData({
+            name: "",
+            email: "",
+            phone: "",
+            role: "Stylist",
+            specialties: "",
+            is_available: true,
+          });
+        },
+        onError: (error: Error) => {
+          toast.error(error.message);
+        },
+      }
+    );
   };
 
   return (

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { services as mockServices } from "@/data/mockData";
 
 export interface Service {
   id: string;
@@ -14,17 +14,27 @@ export interface Service {
   updated_at: string;
 }
 
+// In-memory store for demo mode
+let servicesStore: Service[] = mockServices.map((s) => ({
+  id: s.id,
+  name: s.name,
+  description: s.description,
+  price: s.price,
+  duration: s.duration,
+  category: s.category,
+  image_url: null,
+  is_active: true,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}));
+
 export function useServices() {
   return useQuery({
     queryKey: ["services"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .order("category", { ascending: true });
-
-      if (error) throw error;
-      return data as Service[];
+      // Simulate network delay
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      return [...servicesStore];
     },
   });
 }
@@ -34,14 +44,15 @@ export function useCreateService() {
 
   return useMutation({
     mutationFn: async (service: Omit<Service, "id" | "created_at" | "updated_at">) => {
-      const { data, error } = await supabase
-        .from("services")
-        .insert(service)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const newService: Service = {
+        ...service,
+        id: `service-${Date.now()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      servicesStore = [...servicesStore, newService];
+      return newService;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
@@ -54,15 +65,11 @@ export function useUpdateService() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Service> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("services")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      servicesStore = servicesStore.map((s) =>
+        s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s
+      );
+      return servicesStore.find((s) => s.id === id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
@@ -75,12 +82,8 @@ export function useDeleteService() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("services")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      servicesStore = servicesStore.filter((s) => s.id !== id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["services"] });
