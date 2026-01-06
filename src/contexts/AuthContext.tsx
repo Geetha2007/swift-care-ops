@@ -1,113 +1,84 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { createContext, useContext, useState, ReactNode } from "react";
 
 type AppRole = "admin" | "customer";
 
+// Mock user type for demo mode
+interface MockUser {
+  id: string;
+  email: string;
+  user_metadata: {
+    full_name: string;
+  };
+}
+
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: MockUser | null;
+  session: { user: MockUser } | null;
   role: AppRole | null;
   isLoading: boolean;
   isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  setDemoRole: (role: AppRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchUserRole = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!error && data) {
-      setRole(data.role as AppRole);
-    } else {
-      setRole("customer");
-    }
-  };
-
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          setRole(null);
-        }
-        setIsLoading(false);
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchUserRole(session.user.id);
-      }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const [isLoading] = useState(false);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: { full_name: fullName },
+    // Demo mode: Accept any credentials and create mock user
+    const mockUser: MockUser = {
+      id: "demo-user-" + Date.now(),
+      email: email || "demo@salonsmart.com",
+      user_metadata: {
+        full_name: fullName || "Demo User",
       },
-    });
-    return { error };
+    };
+    setUser(mockUser);
+    setRole("admin"); // Default to admin for demo purposes
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    // Demo mode: Accept any credentials and create mock user
+    const mockUser: MockUser = {
+      id: "demo-user-" + Date.now(),
+      email: email || "demo@salonsmart.com",
+      user_metadata: {
+        full_name: "Demo User",
+      },
+    };
+    setUser(mockUser);
+    setRole("admin"); // Default to admin for demo purposes
+    return { error: null };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
     setUser(null);
-    setSession(null);
     setRole(null);
+  };
+
+  const setDemoRole = (newRole: AppRole) => {
+    setRole(newRole);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        session,
+        session: user ? { user } : null,
         role,
         isLoading,
         isAdmin: role === "admin",
         signUp,
         signIn,
         signOut,
+        setDemoRole,
       }}
     >
       {children}
