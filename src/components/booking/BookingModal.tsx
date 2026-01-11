@@ -107,7 +107,7 @@ export function BookingModal({ open, onOpenChange, service, showServiceSelection
                         <p className="text-sm text-muted-foreground">{svc.category} • {svc.duration} min</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-heading font-semibold text-primary">${Number(svc.price).toFixed(0)}</p>
+                        <p className="font-heading font-semibold text-primary">₹{Number(svc.price).toFixed(0)}</p>
                       </div>
                       {selectedService?.id === svc.id && (
                         <Check className="h-5 w-5 text-primary" />
@@ -251,7 +251,7 @@ export function BookingModal({ open, onOpenChange, service, showServiceSelection
                   </div>
                   <div>
                     <h4 className="font-semibold">{selectedService?.name}</h4>
-                    <p className="text-sm text-muted-foreground">${selectedService?.price} • {selectedService?.duration} min</p>
+                    <p className="text-sm text-muted-foreground">₹{selectedService?.price} • {selectedService?.duration} min</p>
                   </div>
                 </div>
 

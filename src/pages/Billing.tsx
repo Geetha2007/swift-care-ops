@@ -41,7 +41,7 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Paid</p>
-                  <p className="text-2xl font-heading font-bold text-success">${paidTotal.toLocaleString()}</p>
+                  <p className="text-2xl font-heading font-bold text-success">₹{paidTotal.toLocaleString()}</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-success/10 flex items-center justify-center">
                   <Sparkles className="h-5 w-5 text-success" />
@@ -54,7 +54,7 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Pending</p>
-                  <p className="text-2xl font-heading font-bold text-warning">${pendingTotal.toLocaleString()}</p>
+                  <p className="text-2xl font-heading font-bold text-warning">₹{pendingTotal.toLocaleString()}</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-warning/10 flex items-center justify-center">
                   <CreditCard className="h-5 w-5 text-warning" />
@@ -67,7 +67,7 @@ export default function Billing() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Overdue</p>
-                  <p className="text-2xl font-heading font-bold text-destructive">${overdueTotal.toLocaleString()}</p>
+                  <p className="text-2xl font-heading font-bold text-destructive">₹{overdueTotal.toLocaleString()}</p>
                 </div>
                 <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
                   <Banknote className="h-5 w-5 text-destructive" />
@@ -115,7 +115,7 @@ export default function Billing() {
                       <TableCell className="font-medium">{invoice.id}</TableCell>
                       <TableCell>{invoice.client}</TableCell>
                       <TableCell className="text-muted-foreground">{invoice.date}</TableCell>
-                      <TableCell className="font-heading font-semibold">${invoice.amount}</TableCell>
+                      <TableCell className="font-heading font-semibold">₹{invoice.amount}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <MethodIcon className="h-4 w-4 text-muted-foreground" />

@@ -46,7 +46,7 @@ export default function Expenses() {
           <Card className="shadow-soft gradient-primary text-primary-foreground">
             <CardContent className="p-6">
               <p className="text-white/80 text-sm">Total Expenses (This Month)</p>
-              <p className="text-3xl font-heading font-bold mt-1">${totalExpenses.toLocaleString()}</p>
+              <p className="text-3xl font-heading font-bold mt-1">₹{totalExpenses.toLocaleString()}</p>
               <p className="text-white/70 text-sm mt-2">-5.2% from last month</p>
             </CardContent>
           </Card>
@@ -79,7 +79,7 @@ export default function Expenses() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "12px",
                       }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
+                      formatter={(value: number) => [`₹${value.toLocaleString()}`, ""]}
                     />
                     <Legend
                       layout="vertical"
@@ -139,7 +139,7 @@ export default function Expenses() {
                       </TableCell>
                       <TableCell className="text-muted-foreground">{expense.date}</TableCell>
                       <TableCell className="text-right font-heading font-semibold text-destructive">
-                        -${expense.amount.toLocaleString()}
+                        -₹{expense.amount.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   );

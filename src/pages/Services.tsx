@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Calendar } from "lucide-react";
+import { Plus, Edit2, Clock, IndianRupee, Sparkles, Search, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -146,9 +146,9 @@ export default function Services() {
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1 text-sm">
-                          <DollarSign className="h-4 w-4 text-primary" />
+                          <IndianRupee className="h-4 w-4 text-primary" />
                           <span className="font-heading font-semibold text-foreground">
-                            {Number(service.price).toFixed(0)}
+                            ₹{Number(service.price).toFixed(0)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">

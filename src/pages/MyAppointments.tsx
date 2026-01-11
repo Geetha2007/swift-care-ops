@@ -91,7 +91,7 @@ export default function MyAppointments() {
               {appointment.status}
             </Badge>
             <p className="font-heading font-semibold text-primary text-lg">
-              ${Number(appointment.services?.price || 0).toFixed(0)}
+              ₹{Number(appointment.services?.price || 0).toFixed(0)}
             </p>
           </div>
         </div>
