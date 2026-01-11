@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Star, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Clock, DollarSign, Sparkles, Search, Calendar } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useServices, Service } from "@/hooks/useServices";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookingModal } from "@/components/booking/BookingModal";
+import { EditServiceModal } from "@/components/services/EditServiceModal";
 import { cn } from "@/lib/utils";
 
 const categoryColors: Record<string, string> = {
@@ -23,6 +24,8 @@ export default function Services() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [bookingService, setBookingService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const { data: services, isLoading, error } = useServices();
   const { isAdmin } = useAuth();
@@ -64,7 +67,7 @@ export default function Services() {
             />
           </div>
           {isAdmin && (
-            <Button className="gradient-primary shadow-luxury">
+            <Button className="gradient-primary shadow-luxury" onClick={() => setIsAddModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" /> Add Service
             </Button>
           )}
@@ -156,11 +159,13 @@ export default function Services() {
 
                       {isAdmin ? (
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => setEditingService(service)}
+                          >
                             <Edit2 className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       ) : (
@@ -199,6 +204,21 @@ export default function Services() {
           service={bookingService}
         />
       )}
+
+      {/* Edit Service Modal */}
+      <EditServiceModal
+        open={!!editingService}
+        onOpenChange={(open) => !open && setEditingService(null)}
+        service={editingService}
+        mode="edit"
+      />
+
+      {/* Add Service Modal */}
+      <EditServiceModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        mode="add"
+      />
     </AppLayout>
   );
 }
