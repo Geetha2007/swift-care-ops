@@ -1,4 +1,4 @@
-import { Calendar, DollarSign, Users, UserCheck } from "lucide-react";
+import { Calendar, IndianRupee, Users, UserCheck } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
@@ -31,8 +31,8 @@ export default function Dashboard() {
               title="Monthly Revenue"
               value={stats.revenue}
               change={stats.revenueChange}
-              icon={DollarSign}
-              prefix="$"
+              icon={IndianRupee}
+              prefix="₹"
               variant="gold"
             />
           )}
